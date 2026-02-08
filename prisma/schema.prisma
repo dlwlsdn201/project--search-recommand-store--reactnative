@@ -1,0 +1,46 @@
+// SpotFinder — Supabase(PostgreSQL) + PostGIS
+// PostGIS geography(Point)는 Prisma에서 Unsupported로 선언 후, 마이그레이션/raw SQL로 처리
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reviews   Review[]
+}
+
+model Place {
+  id          String   @id @default(uuid())
+  name        String
+  address     String?
+  description String?
+  // PostGIS geography(Point, 4326). 실제 DDL은 Supabase SQL 마이그레이션에서 생성. Prisma raw SQL로 조회/삽입.
+  location    Unsupported("geography(Point, 4326)")?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  reviews     Review[]
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  placeId   String
+  userId    String
+  rating    Decimal  @db.Decimal(2, 1) // 0.0 ~ 5.0
+  content   String?  @db.Text
+  createdAt DateTime @default(now())
+  place     Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([placeId])
+  @@index([userId])
+}

@@ -1,1 +1,2 @@
-// Supabase client & fetch wrapper — to be implemented
+export { geocodeAddress } from './geocode';
+export type { NominatimResult } from './geocode';

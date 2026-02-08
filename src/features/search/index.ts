@@ -1,1 +1,2 @@
-// Search & voice search (STT) — to be implemented
+export { useAddressSearch } from './useAddressSearch';
+export type { AddressSearchResult } from './useAddressSearch';
