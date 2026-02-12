@@ -1,32 +1,30 @@
-/**
- * WebView에 로드할 지도 HTML (Naver Maps JavaScript v3).
- * width/height를 주면 #map에 픽셀 크기를 지정해 iOS WebView에서 지도가 확실히 그려지도록 한다.
- *
- * @see https://api.ncloud-docs.com/docs/en/maps-js-v3-overview
- */
-export function getMapHTML(clientId: string, width?: number, height?: number): string {
-  const w = width ?? 400;
-  const h = height ?? 600;
-  const mapSize = `width:${w}px;height:${h}px;`;
-  const safeClientId = clientId.replace(/"/g, '&quot;');
-
-  return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Map Bridge</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; }
-    #map { ${mapSize} }
+    #map { width: 100%; height: 100%; min-height: 100vh; }
   </style>
-  <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${safeClientId}"></script>
 </head>
 <body>
   <div id="map"></div>
   <script>
     (function() {
+      var params = {};
+      location.search.slice(1).split('&').forEach(function(p) {
+        var kv = p.split('=');
+        if (kv[0]) params[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || '').replace(/\+/g, ' '));
+      });
+      var ncpClientId = params.ncpClientId || params.clientId || '';
+      var w = parseInt(params.width, 10) || 400;
+      var h = parseInt(params.height, 10) || 600;
+      document.getElementById('map').style.width = w + 'px';
+      document.getElementById('map').style.height = h + 'px';
+
       var map = null;
       var markers = [];
 
@@ -58,7 +56,6 @@ export function getMapHTML(clientId: string, width?: number, height?: number): s
         });
       }
 
-      // RN → WebView 호출용 브릿지
       window.__NaverMapBridge = {
         setCenter: function(lat, lng) {
           if (!map || !window.naver || !window.naver.maps) return;
@@ -74,6 +71,10 @@ export function getMapHTML(clientId: string, width?: number, height?: number): s
       };
 
       function init() {
+        if (!ncpClientId) {
+          postToRN({ type: 'MAP_READY' });
+          return;
+        }
         if (!window.naver || !window.naver.maps) {
           setTimeout(init, 50);
           return;
@@ -102,10 +103,17 @@ export function getMapHTML(clientId: string, width?: number, height?: number): s
         postToRN({ type: 'MAP_READY' });
       }
 
-      init();
+      if (!ncpClientId) {
+        init();
+        return;
+      }
+
+      var script = document.createElement('script');
+      script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=' + encodeURIComponent(ncpClientId);
+      script.onload = init;
+      script.onerror = function() { postToRN({ type: 'MAP_READY' }); };
+      document.head.appendChild(script);
     })();
   </script>
 </body>
 </html>
-`.trim();
-}

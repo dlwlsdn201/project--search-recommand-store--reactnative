@@ -4,8 +4,17 @@
  * @see https://docs.expo.dev/guides/environment-variables/
  */
 export const env = {
-  /** Kakao Developers JavaScript 키 (지도 WebView용) */
-  get KAKAO_MAP_API_KEY(): string {
-    return process.env.EXPO_PUBLIC_KAKAO_MAP_API_KEY ?? '';
+  /** Naver Maps JavaScript v3 클라이언트 ID */
+  get NAVER_MAP_CLIENT_ID(): string {
+    return process.env.EXPO_PUBLIC_NAVER_MAP_CLIENT_ID ?? '';
+  },
+
+  /**
+   * Naver 지도 브릿지 HTML URL (호스팅).
+   * 이 URL을 Naver Cloud 콘솔 Service URL에 등록해야 인증이 통과합니다.
+   * 예: https://your-app.vercel.app/naver-map-bridge.html
+   */
+  get NAVER_MAP_BRIDGE_URL(): string {
+    return (process.env.EXPO_PUBLIC_NAVER_MAP_BRIDGE_URL ?? '').replace(/\/$/, '');
   },
 } as const;

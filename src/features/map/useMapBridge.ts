@@ -16,7 +16,7 @@ export type WebViewInjectRef = {
 
 /**
  * RN ↔ WebView 양방향 통신(postMessage)을 관리하는 훅.
- * - RN → WebView: injectJavaScript로 __KakaoMapBridge 메서드 호출
+ * - RN → WebView: injectJavaScript로 __NaverMapBridge 메서드 호출
  * - WebView → RN: window.ReactNativeWebView.postMessage(JSON) 후 onMessage에서 파싱
  */
 export function useMapBridge(callbacks: UseMapBridgeCallbacks = {}) {
@@ -49,8 +49,8 @@ export function useMapBridge(callbacks: UseMapBridgeCallbacks = {}) {
 
   const sendSetCenter = useCallback((lat: number, lng: number) => {
     const script = `(function(){
-      if (window.__KakaoMapBridge && window.__KakaoMapBridge.setCenter) {
-        window.__KakaoMapBridge.setCenter(${lat}, ${lng});
+      if (window.__NaverMapBridge && window.__NaverMapBridge.setCenter) {
+        window.__NaverMapBridge.setCenter(${lat}, ${lng});
       }
     })(); true;`;
     webViewRef.current?.injectJavaScript(script);
@@ -58,8 +58,8 @@ export function useMapBridge(callbacks: UseMapBridgeCallbacks = {}) {
 
   const sendSetZoom = useCallback((level: number) => {
     const script = `(function(){
-      if (window.__KakaoMapBridge && window.__KakaoMapBridge.setZoom) {
-        window.__KakaoMapBridge.setZoom(${level});
+      if (window.__NaverMapBridge && window.__NaverMapBridge.setZoom) {
+        window.__NaverMapBridge.setZoom(${level});
       }
     })(); true;`;
     webViewRef.current?.injectJavaScript(script);
@@ -68,8 +68,8 @@ export function useMapBridge(callbacks: UseMapBridgeCallbacks = {}) {
   const sendSetMarkers = useCallback((markers: MapMarkerPayload[]) => {
     const escaped = JSON.stringify(markers).replace(/</g, '\\u003c');
     const script = `(function(){
-      if (window.__KakaoMapBridge && window.__KakaoMapBridge.setMarkers) {
-        window.__KakaoMapBridge.setMarkers(${escaped});
+      if (window.__NaverMapBridge && window.__NaverMapBridge.setMarkers) {
+        window.__NaverMapBridge.setMarkers(${escaped});
       }
     })(); true;`;
     webViewRef.current?.injectJavaScript(script);
