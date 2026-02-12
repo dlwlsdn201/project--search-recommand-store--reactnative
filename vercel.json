@@ -1,0 +1,5 @@
+{
+  "buildCommand": "echo no-build",
+  "outputDirectory": "public",
+  "framework": null
+}

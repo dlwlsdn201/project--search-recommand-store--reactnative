@@ -1,12 +1,13 @@
 import React, { useEffect } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import WebView from "react-native-webview";
+import { env } from "../../shared/config";
 import { getMapHTML } from "./mapHtml";
 import type { MapMarkerPayload } from "./types";
 import { useMapBridge } from "./useMapBridge";
 
-export type KakaoMapProps = {
-  /** 지도 중심 좌표 (지도 준비 후 적용) */
+export type NaverMapProps = {
+  /** Naver 지도 중심 좌표 (지도 준비 후 적용) */
   center?: { lat: number; lng: number };
   /** 확대 레벨 1~14 (지도 준비 후 적용) */
   zoomLevel?: number;
@@ -24,7 +25,7 @@ export type KakaoMapProps = {
   style?: object;
 };
 
-export function KakaoMap({
+export function NaverMap({
   center,
   zoomLevel = 14,
   markers = [],
@@ -33,7 +34,7 @@ export function KakaoMap({
   onMapMoveEnd,
   onMapClick,
   style,
-}: KakaoMapProps) {
+}: NaverMapProps) {
   const {
     webViewRef,
     isReady,
@@ -65,14 +66,31 @@ export function KakaoMap({
 
   const { width, height: windowHeight } = useWindowDimensions();
   const height = Math.max(300, Math.round(windowHeight) - 120);
-  const html = getMapHTML(Math.round(width), height);
+  const w = Math.round(width);
+
+  const source = (() => {
+    const bridgeUrl = env.NAVER_MAP_BRIDGE_URL;
+    const clientId = env.NAVER_MAP_CLIENT_ID;
+    if (bridgeUrl && clientId) {
+      const q = new URLSearchParams({
+        ncpClientId: clientId,
+        width: String(w),
+        height: String(height),
+      });
+      return { uri: bridgeUrl + "?" + q.toString() };
+    }
+    if (clientId) {
+      return { html: getMapHTML(clientId, w, height) };
+    }
+    return { html: "" };
+  })();
+
   return (
-    <View
-      style={[styles.container, style, { width: Math.round(width), height }]}>
+    <View style={[styles.container, style, { width: w, height }]}>
       <WebView
         ref={webViewRef}
-        source={{ html }}
-        style={[styles.webview, { width: Math.round(width), height }]}
+        source={source}
+        style={[styles.webview, { width: w, height }]}
         onMessage={handleMessage}
         scrollEnabled={false}
         bounces={false}
@@ -92,3 +110,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+

@@ -1,15 +1,9 @@
-# 지도 WebView 연동 (Leaflet + OpenStreetMap)
+# 지도 WebView 연동 (Naver Maps JS v3)
 
 ## 1. 사용 중인 지도
 
-- **Leaflet** + **OpenStreetMap** 타일
-- **API 키·사업자 심사 없음**, 무료 사용
-- `src/features/map/mapHtml.ts`의 `getMapHTML(width?, height?)`가 HTML 문자열을 생성하고, WebView에서 로드
-
-### 1-1. 타일 출처
-
-- OSM 타일: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`
-- [OpenStreetMap 이용 약관](https://www.openstreetmap.org/copyright) 준수 ( attribution 표기 포함 )
+- **Naver Maps JavaScript v3**
+- `src/features/map/mapHtml.ts`의 `getMapHTML(clientId, width?, height?)`가 HTML 문자열을 생성하고, WebView에서 로드
 
 ---
 
@@ -17,7 +11,7 @@
 
 ### 2-1. HTML 측 (지도 페이지)
 
-- 전역 객체: `window.__KakaoMapBridge` (기존 브릿지 이름 유지)
+- 전역 객체: `window.__NaverMapBridge`
 - 메서드:
   - `setCenter(lat, lng)` — 지도 중심 이동
   - `setZoom(level)` — 확대 레벨 (Leaflet 0~18, 앱에서는 1~14 사용)
@@ -36,11 +30,10 @@
 
 ### 2-3. RN → WebView
 
-`injectJavaScript`로 `window.__KakaoMapBridge.setCenter(...)` 등 호출 ( `useMapBridge` 훅에서 처리 ).
+`injectJavaScript`로 `window.__NaverMapBridge.setCenter(...)` 등 호출 ( `useMapBridge` 훅에서 처리 ).
 
 ---
 
 ## 3. 참고
 
-- [Leaflet](https://leafletjs.com/)
-- [OpenStreetMap](https://www.openstreetmap.org/)
+- [Naver Maps JS v3](https://navermaps.github.io/maps.js.en/docs/index.html)

@@ -3,10 +3,11 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ActivityIndicator, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KakaoMap } from '../features/map/KakaoMap';
+import { NaverMap } from '../features/map/NaverMap';
 import type { MapMarkerPayload } from '../features/map/types';
 import type { RootStackParamList } from '../app/navigation/types';
 import { useMapStore } from '../shared/stores/useMapStore';
+import { env } from '../shared/config';
 import { useAddressSearch } from '../features/search/useAddressSearch';
 
 type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Map'>;
@@ -52,6 +53,18 @@ export function MapScreen() {
     );
   }
 
+  const naverClientId = env.NAVER_MAP_CLIENT_ID;
+
+  if (!naverClientId) {
+    return (
+      <View style={styles.placeholder}>
+        <Text style={styles.placeholderText}>
+          .env에 EXPO_PUBLIC_NAVER_MAP_CLIENT_ID를 설정해 주세요.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={[styles.searchBar, { paddingTop: Math.max(insets.top, 8) }]}>
@@ -72,7 +85,7 @@ export function MapScreen() {
         </View>
         {error && <Text style={styles.errorText}>{error}</Text>}
       </View>
-      <KakaoMap
+      <NaverMap
         center={center}
         zoomLevel={zoomLevel}
         markers={markers}
@@ -134,3 +147,4 @@ const styles = StyleSheet.create({
     color: '#999',
   },
 });
+
