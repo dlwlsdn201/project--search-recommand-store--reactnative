@@ -1,1 +1,1 @@
-// Place domain model & types — to be implemented
+export type { Place } from './model';

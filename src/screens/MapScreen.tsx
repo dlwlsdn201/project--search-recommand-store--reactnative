@@ -1,46 +1,87 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ActivityIndicator, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NaverMap } from '../features/map/NaverMap';
 import type { MapMarkerPayload } from '../features/map/types';
 import type { RootStackParamList } from '../app/navigation/types';
 import { useMapStore } from '../shared/stores/useMapStore';
+import { useSearchStore } from '../shared/stores/useSearchStore';
 import { env } from '../shared/config';
-import { useAddressSearch } from '../features/search/useAddressSearch';
+import { geocodeAddress } from '../shared/api/geocode';
+import {
+  SearchBar,
+  RadiusSlider,
+  ListViewModal,
+  usePlaceSearch,
+} from '../features/search';
+import type { Place } from '../entities/place';
 
 type MapScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Map'>;
 
-const SAMPLE_MARKERS: MapMarkerPayload[] = [
-  { id: '1', lat: 37.5665, lng: 126.978, title: '서울시청' },
-  { id: '2', lat: 37.5705, lng: 126.985, title: '광화문' },
-];
+const SEARCH_PIN_ID = '__search_location__';
+
+function placesToMarkers(places: Place[]): MapMarkerPayload[] {
+  return places.map((p) => ({
+    id: p.id,
+    lat: p.latitude,
+    lng: p.longitude,
+    title: p.name,
+  }));
+}
 
 export function MapScreen() {
   const navigation = useNavigation<MapScreenNavigationProp>();
   const insets = useSafeAreaInsets();
   const { center, zoomLevel, setCenter, setZoomLevel } = useMapStore();
-  const { search, isLoading, error } = useAddressSearch();
-  const [addressQuery, setAddressQuery] = useState('');
-  const [markers, setMarkers] = useState<MapMarkerPayload[]>(SAMPLE_MARKERS);
+  const { places, reset, setIsSearching } = useSearchStore();
+  const [searchPin, setSearchPin] = useState<MapMarkerPayload | null>(null);
 
-  const handleAddressSubmit = useCallback(async () => {
-    const result = await search(addressQuery);
-    if (!result) return;
-    setCenter({ lat: result.lat, lng: result.lng });
-    setZoomLevel(15);
-    setMarkers([
-      { id: 'search', lat: result.lat, lng: result.lng, title: result.displayName },
-    ]);
-  }, [addressQuery, search, setCenter, setZoomLevel]);
+  usePlaceSearch();
+
+  useEffect(() => {
+    return () => reset();
+  }, [reset]);
+
+  /** 키워드를 지오코딩하여 지도 센터를 이동 → usePlaceSearch가 RPC 자동 호출 */
+  const handleSearchSubmit = useCallback(
+    async (keyword: string) => {
+      setIsSearching(true);
+      const result = await geocodeAddress(keyword);
+      setIsSearching(false);
+      if (!result) return;
+      setCenter({ lat: result.lat, lng: result.lng });
+      setZoomLevel(15);
+      setSearchPin({
+        id: SEARCH_PIN_ID,
+        lat: result.lat,
+        lng: result.lng,
+        title: result.displayName,
+      });
+    },
+    [setCenter, setZoomLevel, setIsSearching],
+  );
 
   const handleMarkerClick = useCallback(
     (payload: { id: string }) => {
+      if (payload.id === SEARCH_PIN_ID) return;
       navigation.navigate('PlaceDetail', { placeId: payload.id });
     },
-    [navigation]
+    [navigation],
   );
+
+  const handlePlacePress = useCallback(
+    (placeId: string) => {
+      navigation.navigate('PlaceDetail', { placeId });
+    },
+    [navigation],
+  );
+
+  const markers = useMemo(() => {
+    const placeMarkers = placesToMarkers(places);
+    return searchPin ? [searchPin, ...placeMarkers] : placeMarkers;
+  }, [places, searchPin]);
 
   if (Platform.OS === 'web') {
     return (
@@ -67,30 +108,15 @@ export function MapScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.searchBar, { paddingTop: Math.max(insets.top, 8) }]}>
-        <View style={styles.searchRow}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="주소 또는 장소 검색"
-            placeholderTextColor="#999"
-            value={addressQuery}
-            onChangeText={setAddressQuery}
-            returnKeyType="search"
-            onSubmitEditing={handleAddressSubmit}
-            editable={!isLoading}
-          />
-          {isLoading && (
-            <ActivityIndicator style={styles.loader} size="small" color="#666" />
-          )}
-        </View>
-        {error && <Text style={styles.errorText}>{error}</Text>}
-      </View>
+      <SearchBar paddingTop={Math.max(insets.top, 8)} onSubmit={handleSearchSubmit} />
+      <RadiusSlider />
       <NaverMap
         center={center}
         zoomLevel={zoomLevel}
         markers={markers}
         onMarkerClick={handleMarkerClick}
       />
+      <ListViewModal onPlacePress={handlePlacePress} />
     </View>
   );
 }
@@ -98,36 +124,6 @@ export function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  searchBar: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e0e0e0',
-  },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    height: 44,
-    paddingHorizontal: 16,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    fontSize: 16,
-    color: '#111',
-  },
-  loader: {
-    position: 'absolute',
-    right: 16,
-  },
-  errorText: {
-    marginTop: 6,
-    fontSize: 13,
-    color: '#c00',
   },
   placeholder: {
     flex: 1,
@@ -147,4 +143,3 @@ const styles = StyleSheet.create({
     color: '#999',
   },
 });
-

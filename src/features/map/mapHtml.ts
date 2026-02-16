@@ -86,7 +86,10 @@ export function getMapHTML(
         map = new naver.maps.Map('map', {
           center: new naver.maps.LatLng(37.5665, 126.9780),
           zoom: 14,
-          zoomControl: false,
+          zoomControl: true,
+          zoomControlOptions: {
+            position: naver.maps.Position.TOP_RIGHT,
+          },
           mapDataControl: false,
         });
 
