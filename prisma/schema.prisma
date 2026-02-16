@@ -5,9 +5,9 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// v7: connection URL은 prisma.config.ts의 datasource.url로 이동
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -24,11 +24,17 @@ model Place {
   name        String
   address     String?
   description String?
+  category    String?
+  phone       String?
+  imageUrl    String?  @map("image_url")
   // PostGIS geography(Point, 4326). 실제 DDL은 Supabase SQL 마이그레이션에서 생성. Prisma raw SQL로 조회/삽입.
   location    Unsupported("geography(Point, 4326)")?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  reviews     Review[]
+  rating      Decimal  @default(0.0) @db.Decimal(2, 1)
+  reviewCount Int      @default(0) @map("review_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("places")
 }
 
 model Review {
@@ -38,7 +44,6 @@ model Review {
   rating    Decimal  @db.Decimal(2, 1) // 0.0 ~ 5.0
   content   String?  @db.Text
   createdAt DateTime @default(now())
-  place     Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([placeId])

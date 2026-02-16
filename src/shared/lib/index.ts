@@ -1,1 +1,1 @@
-// Utility functions & formatters — to be implemented
+export { supabase } from './supabase';
