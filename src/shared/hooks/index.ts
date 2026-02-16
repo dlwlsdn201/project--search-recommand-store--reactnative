@@ -1,1 +1,1 @@
-// Shared hooks — to be implemented
+export { useDebounce } from './useDebounce';
