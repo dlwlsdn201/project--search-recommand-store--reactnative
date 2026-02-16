@@ -17,4 +17,13 @@ export const env = {
   get NAVER_MAP_BRIDGE_URL(): string {
     return (process.env.EXPO_PUBLIC_NAVER_MAP_BRIDGE_URL ?? '').replace(/\/$/, '');
   },
+  /** Supabase 프로젝트 URL */
+  get SUPABASE_URL(): string {
+    return process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+  },
+
+  /** Supabase anon(공개) 키 */
+  get SUPABASE_ANON_KEY(): string {
+    return process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+  },
 } as const;
