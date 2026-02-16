@@ -19,7 +19,7 @@
         var kv = p.split('=');
         if (kv[0]) params[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || '').replace(/\+/g, ' '));
       });
-      var ncpClientId = params.ncpClientId || params.clientId || '';
+      var ncpKeyId = params.ncpKeyId || params.ncpClientId || params.clientId || '';
       var w = parseInt(params.width, 10) || 400;
       var h = parseInt(params.height, 10) || 600;
       document.getElementById('map').style.width = w + 'px';
@@ -70,8 +70,16 @@
         }
       };
 
+      function showError(msg) {
+        var el = document.getElementById('map');
+        if (el) {
+          el.innerHTML = '<div style="padding:16px;font-size:14px;color:#c00;">' + (msg || '지도 로드 실패') + '</div>';
+        }
+      }
+
       function init() {
-        if (!ncpClientId) {
+        if (!ncpKeyId) {
+          showError('ncpKeyId가 없습니다. URL에 ncpKeyId=클라이언트ID 를 붙여 주세요.');
           postToRN({ type: 'MAP_READY' });
           return;
         }
@@ -80,7 +88,8 @@
           return;
         }
 
-        map = new naver.maps.Map('map', {
+        try {
+          map = new naver.maps.Map('map', {
           center: new naver.maps.LatLng(37.5665, 126.9780),
           zoom: 14,
           zoomControl: false,
@@ -101,17 +110,24 @@
         });
 
         postToRN({ type: 'MAP_READY' });
+        } catch (e) {
+          showError('지도 생성 실패: ' + (e && e.message ? e.message : String(e)));
+          postToRN({ type: 'MAP_READY' });
+        }
       }
 
-      if (!ncpClientId) {
+      if (!ncpKeyId) {
         init();
         return;
       }
 
       var script = document.createElement('script');
-      script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=' + encodeURIComponent(ncpClientId);
+      script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=' + encodeURIComponent(ncpKeyId);
       script.onload = init;
-      script.onerror = function() { postToRN({ type: 'MAP_READY' }); };
+      script.onerror = function() {
+        showError('네이버 지도 스크립트 로드 실패. NCP Web 서비스 URL 등록 및 Dynamic Map 활성화를 확인하세요.');
+        postToRN({ type: 'MAP_READY' });
+      };
       document.head.appendChild(script);
     })();
   </script>

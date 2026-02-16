@@ -73,7 +73,7 @@ export function NaverMap({
     const clientId = env.NAVER_MAP_CLIENT_ID;
     if (bridgeUrl && clientId) {
       const q = new URLSearchParams({
-        ncpClientId: clientId,
+        ncpKeyId: clientId,
         width: String(w),
         height: String(height),
       });
@@ -110,4 +110,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-

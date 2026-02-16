@@ -4,11 +4,15 @@
  *
  * @see https://api.ncloud-docs.com/docs/en/maps-js-v3-overview
  */
-export function getMapHTML(clientId: string, width?: number, height?: number): string {
+export function getMapHTML(
+  clientId: string,
+  width?: number,
+  height?: number,
+): string {
   const w = width ?? 400;
   const h = height ?? 600;
   const mapSize = `width:${w}px;height:${h}px;`;
-  const safeClientId = clientId.replace(/"/g, '&quot;');
+  const safeClientId = clientId.replace(/"/g, "&quot;");
 
   return `
 <!DOCTYPE html>
@@ -21,7 +25,7 @@ export function getMapHTML(clientId: string, width?: number, height?: number): s
     html, body { width: 100%; height: 100%; }
     #map { ${mapSize} }
   </style>
-  <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${safeClientId}"></script>
+  <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${safeClientId}"></script>
 </head>
 <body>
   <div id="map"></div>
