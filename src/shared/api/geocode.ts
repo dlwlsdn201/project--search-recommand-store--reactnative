@@ -11,6 +11,13 @@ export type NominatimResult = {
   type?: string;
 };
 
+export type AddressSuggestion = {
+  placeId: number;
+  displayName: string;
+  lat: number;
+  lng: number;
+};
+
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 
 export async function geocodeAddress(query: string): Promise<{ lat: number; lng: number; displayName: string } | null> {
@@ -41,4 +48,36 @@ export async function geocodeAddress(query: string): Promise<{ lat: number; lng:
     lng,
     displayName: first.display_name ?? trimmed,
   };
+}
+
+/** 주소 자동완성 – 입력값 기반 후보 최대 5건 반환 */
+export async function fetchAddressSuggestions(query: string): Promise<AddressSuggestion[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+
+  const params = new URLSearchParams({
+    q: trimmed,
+    format: 'json',
+    limit: '5',
+    countrycodes: 'kr',
+  });
+
+  try {
+    const res = await fetch(`${NOMINATIM_URL}?${params.toString()}`, {
+      headers: { Accept: 'application/json', 'Accept-Language': 'ko' },
+    });
+    if (!res.ok) return [];
+    const data = (await res.json()) as NominatimResult[];
+    if (!Array.isArray(data)) return [];
+    return data
+      .map((item) => ({
+        placeId: item.place_id,
+        displayName: item.display_name,
+        lat: parseFloat(item.lat),
+        lng: parseFloat(item.lon),
+      }))
+      .filter((item) => !Number.isNaN(item.lat) && !Number.isNaN(item.lng));
+  } catch {
+    return [];
+  }
 }
