@@ -124,6 +124,7 @@ export function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    overflow: 'visible',
   },
   placeholder: {
     flex: 1,
